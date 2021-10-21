@@ -28,7 +28,7 @@ extension URLCache {
 }
 ```
 
-Remember when setting the cache the response (in this case our image) must be no larger than about 5% of the disk cache (See [this discussion](https://developer.apple.com/documentation/foundation/nsurlsessiondatadelegate/1411612-urlsession#discussion))
+Remember when setting the cache the response (in this case our image) must be no larger than about 5% of the disk cache (See [this discussion](https://developer.apple.com/documentation/foundation/nsurlsessiondatadelegate/1411612-urlsession#discussion)).
 
 ## Installation
 
