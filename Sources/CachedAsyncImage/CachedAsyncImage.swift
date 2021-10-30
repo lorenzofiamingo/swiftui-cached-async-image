@@ -105,7 +105,11 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     ///     would name with the `@2x` suffix if stored in a file on disk.
     public init(url: URL?, urlCache: URLCache = .shared,  scale: CGFloat = 1) where Content == Image {
         self.init(url: url, urlCache: urlCache, scale: scale) { phase in
+#if os(macOS)
+            phase.image ?? Image(nsImage: .init())
+#else
             phase.image ?? Image(uiImage: .init())
+#endif
         }
     }
     
@@ -201,10 +205,17 @@ public struct CachedAsyncImage<Content>: View where Content: View {
             guard let url = url else { return }
             let request = URLRequest(url: url)
             let (data, _) = try await urlSession.data(for: request)
+#if os(macOS)
+            if let nsImage = NSImage(data: data) {
+                let image = Image(nsImage: nsImage)
+                phase = .success(image)
+            }
+#else
             if let uiImage = UIImage(data: data) {
                 let image = Image(uiImage: uiImage)
                 phase = .success(image)
             }
+#endif
         } catch {
             phase = .failure(error)
         }
