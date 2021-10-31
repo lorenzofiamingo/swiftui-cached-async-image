@@ -68,14 +68,17 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     
     private let url: URL?
     
+    private let urlSession: URLSession
+    
     private let scale: CGFloat
     
-    private let urlSession: URLSession
+    private let transaction: Transaction
     
     private let content: (AsyncImagePhase) -> Content
     
     public var body: some View {
         content(phase)
+            .animation(transaction.animation)
             .task(id: url) {
                 await load(url: url)
             }
@@ -190,14 +193,14 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     ///   - content: A closure that takes the load phase as an input, and
     ///     returns the view to display for the specified phase.
     public init(url: URL?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
-        self.url = url
-        self.scale = scale
-        self.content = content
-        
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = urlCache
         configuration.requestCachePolicy = .returnCacheDataElseLoad
+        self.url = url
         self.urlSession =  URLSession(configuration: configuration)
+        self.scale = scale
+        self.transaction = transaction
+        self.content = content
     }
     
     private func load(url: URL?) async {
