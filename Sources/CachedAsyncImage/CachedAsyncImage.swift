@@ -1,6 +1,7 @@
 //
 //  Created by Lorenzo Fiamingo on 04/11/20.
 //
+
 import SwiftUI
 
 /// A view that asynchronously loads, cache and displays an image.
@@ -212,15 +213,26 @@ public struct CachedAsyncImage<Content>: View where Content: View {
             if let nsImage = NSImage(data: data) {
                 let image = Image(nsImage: nsImage)
                 phase = .success(image)
+            } else {
+                throw AsyncImage<Content>.LoadingError()
             }
 #else
             if let uiImage = UIImage(data: data) {
                 let image = Image(uiImage: uiImage)
                 phase = .success(image)
+            } else {
+                throw AsyncImage<Content>.LoadingError()
             }
 #endif
         } catch {
             phase = .failure(error)
         }
+    }
+}
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+private extension AsyncImage {
+    
+    struct LoadingError: Error {
     }
 }
