@@ -79,7 +79,6 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     
     public var body: some View {
         content(phase)
-            .animation(transaction.animation)
             .task(id: url) {
                 await load(url: url)
             }
@@ -212,20 +211,26 @@ public struct CachedAsyncImage<Content>: View where Content: View {
 #if os(macOS)
             if let nsImage = NSImage(data: data) {
                 let image = Image(nsImage: nsImage)
-                phase = .success(image)
+                withAnimation(transaction.animation) {
+                    phase = .success(image)
+                }
             } else {
                 throw AsyncImage<Content>.LoadingError()
             }
 #else
             if let uiImage = UIImage(data: data) {
                 let image = Image(uiImage: uiImage)
-                phase = .success(image)
+                withAnimation(transaction.animation) {
+                    phase = .success(image)
+                }
             } else {
                 throw AsyncImage<Content>.LoadingError()
             }
 #endif
         } catch {
-            phase = .failure(error)
+            withAnimation(transaction.animation) {
+                phase = .failure(error)
+            }
         }
     }
 }
