@@ -195,7 +195,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     public init(url: URL?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = urlCache
-        configuration.requestCachePolicy = .returnCacheDataElseLoad
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         self.url = url
         self.urlSession =  URLSession(configuration: configuration)
         self.scale = scale
@@ -204,14 +204,28 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     }
     
     private func load(url: URL?) async {
+        guard let url = url else { return }
+        let request = URLRequest(url: url)
+        let cachedData: Data?
+        let animation: Animation?
+        if let cachedResponse = urlSession.configuration.urlCache?.cachedResponse(for: request) {
+            cachedData = cachedResponse.data
+            animation = nil
+        } else {
+            cachedData = nil
+            animation = transaction.animation
+        }
         do {
-            guard let url = url else { return }
-            let request = URLRequest(url: url)
-            let (data, _) = try await urlSession.data(for: request)
+            let data: Data
+            if let cachedData = cachedData {
+                data = cachedData
+            } else {
+                (data, _) = try await urlSession.data(for: request)
+            }
 #if os(macOS)
             if let nsImage = NSImage(data: data) {
                 let image = Image(nsImage: nsImage)
-                withAnimation(transaction.animation) {
+                withAnimation(animation) {
                     phase = .success(image)
                 }
             } else {
@@ -220,7 +234,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
 #else
             if let uiImage = UIImage(data: data) {
                 let image = Image(uiImage: uiImage)
-                withAnimation(transaction.animation) {
+                withAnimation(animation) {
                     phase = .success(image)
                 }
             } else {
@@ -228,7 +242,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
             }
 #endif
         } catch {
-            withAnimation(transaction.animation) {
+            withAnimation(animation) {
                 phase = .failure(error)
             }
         }
