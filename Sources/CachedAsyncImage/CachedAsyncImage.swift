@@ -65,7 +65,7 @@ import SwiftUI
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 public struct CachedAsyncImage<Content>: View where Content: View {
     
-    @State private var phase: AsyncImagePhase = .empty
+    @State private var phase: AsyncImagePhase
     
     private let url: URL?
     
@@ -79,9 +79,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     
     public var body: some View {
         content(phase)
-            .task(id: url) {
-                await load(url: url)
-            }
+            .task(id: url, load)
     }
     
     /// Loads and displays an image from the specified URL.
@@ -201,61 +199,70 @@ public struct CachedAsyncImage<Content>: View where Content: View {
         self.scale = scale
         self.transaction = transaction
         self.content = content
-        loadFromCache(url: url)
+        
+        
+        if let image = cachedImage(from: url, cache: urlCache) {
+            self._phase = State(wrappedValue: .success(image))
+        } else  {
+            self._phase = State(wrappedValue: .empty)
+        }
     }
     
-    private func load(url: URL?) async {
-        guard let url = url else { return }
-        let request = URLRequest(url: url)
+    @Sendable
+    private func load() async {
         do {
-            let (data, _) = try await urlSession.data(for: request)
-            process(data: data, animation: transaction.animation)
+            if let image = try await remoteImage(from: url, session: urlSession) {
+                withAnimation(transaction.animation) {
+                    phase = .success(image)
+                }
+            } else {
+                throw AsyncImage<Content>.LoadingError()
+            }
         } catch {
             withAnimation(transaction.animation) {
                 phase = .failure(error)
             }
         }
     }
-    
-    private func loadFromCache(url: URL?) {
-        guard let url = url else { return }
-        let request = URLRequest(url: url)
-        guard let cachedResponse = urlSession.configuration.urlCache?.cachedResponse(for: request) else { return }
-        process(data: cachedResponse.data)
-    }
-    
-    private func process(data: Data, animation: Animation? = nil) {
-        do {
-#if os(macOS)
-            if let nsImage = NSImage(data: data) {
-                let image = Image(nsImage: nsImage)
-                withAnimation(animation) {
-                    phase = .success(image)
-                }
-            } else {
-                throw AsyncImage<Content>.LoadingError()
-            }
-#else
-            if let uiImage = UIImage(data: data) {
-                let image = Image(uiImage: uiImage)
-                withAnimation(animation) {
-                    phase = .success(image)
-                }
-            } else {
-                throw AsyncImage<Content>.LoadingError()
-            }
-#endif
-        } catch {
-            withAnimation(animation) {
-                phase = .failure(error)
-            }
-        }
-    }
 }
+
+// MARK: - LoadingError
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 private extension AsyncImage {
     
     struct LoadingError: Error {
     }
+}
+
+// MARK: - Helpers
+
+private func remoteImage(from url: URL?, session: URLSession) async throws -> Image? {
+    guard let url = url else { return nil }
+    let request = URLRequest(url: url)
+    let (data, _) = try await session.data(for: request)
+    return image(from: data)
+}
+
+private func cachedImage(from url: URL?, cache: URLCache) -> Image? {
+    guard let url = url else { return nil }
+    let request = URLRequest(url: url)
+    guard let cachedResponse = cache.cachedResponse(for: request) else { return nil }
+    return image(from: cachedResponse.data)
+}
+
+private func image(from data: Data) -> Image? {
+#if os(macOS)
+    if let nsImage = NSImage(data: data) {
+        return Image(nsImage: nsImage)
+    } else {
+        return nil
+    }
+#else
+    if let uiImage = UIImage(data: data) {
+        return Image(uiImage: uiImage)
+    } else {
+        return nil
+    }
+#endif
 }
