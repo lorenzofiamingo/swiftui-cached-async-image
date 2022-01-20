@@ -237,6 +237,7 @@ private extension AsyncImage {
 
 // MARK: - Helpers
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 private func remoteImage(from url: URL?, session: URLSession) async throws -> Image? {
     guard let url = url else { return nil }
     let request = URLRequest(url: url)
@@ -244,6 +245,7 @@ private func remoteImage(from url: URL?, session: URLSession) async throws -> Im
     return image(from: data)
 }
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 private func cachedImage(from url: URL?, cache: URLCache) -> Image? {
     guard let url = url else { return nil }
     let request = URLRequest(url: url)
@@ -251,6 +253,7 @@ private func cachedImage(from url: URL?, cache: URLCache) -> Image? {
     return image(from: cachedResponse.data)
 }
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 private func image(from data: Data) -> Image? {
 #if os(macOS)
     if let nsImage = NSImage(data: data) {
