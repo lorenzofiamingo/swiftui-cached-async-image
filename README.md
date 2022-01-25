@@ -14,9 +14,9 @@ to this:
 CachedAsyncImage(url: logoURL)
 ```
 
-In addition to `AsyncImage` initializers, you have the possibilities to specify the cash you want to use (by default `URLCache.shared` is used):
+In addition to `AsyncImage` initializers, you have the possibilities to specify the cash you want to use (by default `URLCache.shared` is used), and to use `URLRequest` instead of `URL`:
 ```swift
-CachedAsyncImage(url: logoURL, urlCache: .imageCache)
+CachedAsyncImage(urlRequest: logoURLRequest, urlCache: .imageCache)
 ```
 
 ```swift
