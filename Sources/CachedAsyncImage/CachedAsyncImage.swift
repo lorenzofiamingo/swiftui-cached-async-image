@@ -24,7 +24,7 @@ import SwiftUI
 /// is about half the size of the grey box.](AsyncImage-1)
 ///
 /// You can specify a custom placeholder using
-/// ``init(url:scale:content:placeholder:)``. With this initializer, you can
+/// ``init(url:urlCache:scale:content:placeholder:)``. With this initializer, you can
 /// also use the `content` parameter to manipulate the loaded image.
 /// For example, you can add a modifier to make the loaded image resizable:
 ///
@@ -42,17 +42,17 @@ import SwiftUI
 /// right, and an arrow pointing from the first to the second.](AsyncImage-2)
 ///
 /// > Important: You can't apply image-specific modifiers, like
-/// ``Image/resizable(capInsets:resizingMode:)``, directly to an `AsyncImage`.
+/// ``Image/resizable(capInsets:resizingMode:)``, directly to a `CachedAsyncImage`.
 /// Instead, apply them to the ``Image`` instance that your `content`
 /// closure gets when defining the view's appearance.
 ///
 /// To gain more control over the loading process, use the
-/// ``init(url:scale:transaction:content:)`` initializer, which takes a
+/// ``init(url:urlCache:scale:transaction:content:)`` initializer, which takes a
 /// `content` closure that receives an ``AsyncImagePhase`` to indicate
 /// the state of the loading operation. Return a view that's appropriate
 /// for the current phase:
 ///
-///     AsyncImage(url: URL(string: "https://example.com/icon.png")) { phase in
+///     CachedAsyncImage(url: URL(string: "https://example.com/icon.png")) { phase in
 ///         if let image = phase.image {
 ///             image // Displays the loaded image.
 ///         } else if phase.error != nil {
