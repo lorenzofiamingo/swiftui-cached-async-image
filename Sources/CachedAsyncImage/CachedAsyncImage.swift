@@ -296,30 +296,40 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     public init(urlRequest: URLRequest?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = urlCache
-        configuration.requestCachePolicy = .returnCacheDataElseLoad
         self.urlRequest = urlRequest
         self.urlSession =  URLSession(configuration: configuration)
         self.scale = scale
         self.transaction = transaction
         self.content = content
         
-        
-        if let image = cachedImage(from: urlRequest, cache: urlCache) {
-            self._phase = State(wrappedValue: .success(image))
-        } else  {
-            self._phase = State(wrappedValue: .empty)
+        self._phase = State(wrappedValue: .empty)
+        do {
+            if let urlRequest = urlRequest, let image = try cachedImage(from: urlRequest, cache: urlCache) {
+                self._phase = State(wrappedValue: .success(image))
+            }
+        } catch {
+            self._phase = State(wrappedValue: .failure(error))
         }
     }
     
     @Sendable
     private func load() async {
         do {
-            if let image = try await remoteImage(from: urlRequest, session: urlSession) {
-                withAnimation(transaction.animation) {
+            if let urlRequest = urlRequest {
+                let (image, metrics) = try await remoteImage(from: urlRequest, session: urlSession)
+                if metrics.transactionMetrics.last?.resourceFetchType == .localCache {
+                    // WARNING: This does not behave well when the url is changed with another
                     phase = .success(image)
+                } else {
+                    withAnimation(transaction.animation) {
+                        phase = .success(image)
+                    }
                 }
             } else {
-                throw AsyncImage<Content>.LoadingError()
+                withAnimation(transaction.animation) {
+                    print("EMPTY")
+                    phase = .empty
+                }
             }
         } catch {
             withAnimation(transaction.animation) {
@@ -341,32 +351,51 @@ private extension AsyncImage {
 // MARK: - Helpers
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-private func remoteImage(from request: URLRequest?, session: URLSession) async throws -> Image? {
-    guard let request = request else { return nil }
-    let (data, _) = try await session.data(for: request)
-    return image(from: data)
-}
-
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-private func cachedImage(from request: URLRequest?, cache: URLCache) -> Image? {
-    guard let request = request else { return nil }
-    guard let cachedResponse = cache.cachedResponse(for: request) else { return nil }
-    return image(from: cachedResponse.data)
-}
-
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
-private func image(from data: Data) -> Image? {
+private extension CachedAsyncImage {
+    func remoteImage(from request: URLRequest, session: URLSession) async throws -> (Image, URLSessionTaskMetrics) {
+        let (data, _, metrics) = try await session.data(for: request)
+        return (try image(from: data), metrics)
+    }
+    
+    private func cachedImage(from request: URLRequest, cache: URLCache) throws -> Image? {
+        guard let cachedResponse = cache.cachedResponse(for: request) else { return nil }
+        return try image(from: cachedResponse.data)
+    }
+    
+    private func image(from data: Data) throws -> Image {
 #if os(macOS)
-    if let nsImage = NSImage(data: data) {
-        return Image(nsImage: nsImage)
-    } else {
-        return nil
-    }
+        if let nsImage = NSImage(data: data) {
+            return Image(nsImage: nsImage)
+        } else {
+            throw AsyncImage<Content>.LoadingError()
+        }
 #else
-    if let uiImage = UIImage(data: data) {
-        return Image(uiImage: uiImage)
-    } else {
-        return nil
-    }
+        if let uiImage = UIImage(data: data) {
+            return Image(uiImage: uiImage)
+        } else {
+            throw AsyncImage<Content>.LoadingError()
+        }
 #endif
+    }
+}
+
+// MARK: - AsyncImageURLSession
+
+private class URLSessionTaskController: NSObject, URLSessionTaskDelegate {
+    
+    var metrics: URLSessionTaskMetrics?
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, didFinishCollecting metrics: URLSessionTaskMetrics) {
+        self.metrics = metrics
+    }
+}
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+private extension URLSession {
+    
+    func data(for request: URLRequest) async throws -> (Data, URLResponse, URLSessionTaskMetrics) {
+        let controller = URLSessionTaskController()
+        let (data, response) = try await data(for: request, delegate: controller)
+        return (data, response, controller.metrics!)
+    }
 }
