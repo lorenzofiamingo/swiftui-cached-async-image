@@ -13,10 +13,9 @@ let package = Package(
     products: [
         .library(
             name: "CachedAsyncImage",
-            targets: ["CachedAsyncImage"])v
+            targets: ["CachedAsyncImage"])
     ],
     targets: [
-        .target(
-            name: "CachedAsyncImage")
+        .target(name: "CachedAsyncImage")
     ]
 )
