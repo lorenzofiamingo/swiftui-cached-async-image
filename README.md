@@ -1,4 +1,4 @@
-# CachedAsyncImage 🗃️
+# SwiftUI CachedAsyncImage 🗃️
 
 `CachedAsyncImage` is `AsyncImage`, but with cache capabilities. 
 
@@ -39,6 +39,10 @@ Remember when setting the cache the response (in this case our image) must be no
 
 ## Other projects
 
-[VerticalTabView 🔝](https://github.com/lorenzofiamingo/SwiftUI-VerticalTabView)
+[SwiftUI MapItemPicker 🗺️](https://github.com/lorenzofiamingo/SwiftUI-MapItemPicker)
 
-[SharedObject 🍱](https://github.com/lorenzofiamingo/SwiftUI-SharedObject)
+[SwiftUI PhotosPicker 🌇](https://github.com/lorenzofiamingo/SwiftUI-PhotosPicker)
+
+[SwiftUI VerticalTabView 🔝](https://github.com/lorenzofiamingo/SwiftUI-VerticalTabView)
+
+[SwiftUI SharedObject 🍱](https://github.com/lorenzofiamingo/SwiftUI-SharedObject)
