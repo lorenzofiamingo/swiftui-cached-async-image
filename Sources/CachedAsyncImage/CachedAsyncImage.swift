@@ -327,7 +327,6 @@ public struct CachedAsyncImage<Content>: View where Content: View {
                 }
             } else {
                 withAnimation(transaction.animation) {
-                    print("EMPTY")
                     phase = .empty
                 }
             }
