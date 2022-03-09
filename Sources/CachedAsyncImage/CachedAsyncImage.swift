@@ -351,8 +351,12 @@ private extension AsyncImage {
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 private extension CachedAsyncImage {
-    func remoteImage(from request: URLRequest, session: URLSession) async throws -> (Image, URLSessionTaskMetrics) {
+    private func remoteImage(from request: URLRequest, session: URLSession) async throws -> (Image, URLSessionTaskMetrics) {
         let (data, _, metrics) = try await session.data(for: request)
+        if metrics.redirectCount > 0, let lastResponse = metrics.transactionMetrics.last?.response {
+            let lastCachedResponse = CachedURLResponse(response: lastResponse, data: data)
+            session.configuration.urlCache!.storeCachedResponse(lastCachedResponse, for: request)
+        }
         return (try image(from: data), metrics)
     }
     
