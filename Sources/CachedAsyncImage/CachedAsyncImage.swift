@@ -404,23 +404,3 @@ private extension URLSession {
         return (data, response, controller.metrics!)
     }
 }
-
-extension URLCache {
-    
-    func cachedResponse(for request: URLRequest, followRedirects: Bool) -> CachedURLResponse? {
-        if
-            followRedirects,
-            let response = cachedResponse(for: request)?.response as? HTTPURLResponse,
-            [301, 302, 303, 307, 308].contains(response.statusCode),
-            let redirectedURLString = response.allHeaderFields["Location"] as? String,
-            let redirectedURL = URL(string: redirectedURLString)
-        {
-            var redirectedRequest = request
-            redirectedRequest.url = redirectedURL
-            let redirectedResponse = cachedResponse(for: redirectedRequest, followRedirects: followRedirects)
-            return redirectedResponse
-        } else {
-            return cachedResponse(for: request)
-        }
-    }
-}
