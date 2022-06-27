@@ -39,6 +39,8 @@ Remember when setting the cache the response (in this case our image) must be no
 
 ## Other projects
 
+[SwiftUI AsyncButton 🖲️](https://github.com/lorenzofiamingo/swiftui-async-button)
+
 [SwiftUI MapItemPicker 🗺️](https://github.com/lorenzofiamingo/swiftui-map-item-picker)
 
 [SwiftUI PhotosPicker 🌇](https://github.com/lorenzofiamingo/swiftui-photos-picker)
