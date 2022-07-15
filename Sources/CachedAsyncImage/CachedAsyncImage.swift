@@ -375,7 +375,7 @@ private extension CachedAsyncImage {
             throw AsyncImage<Content>.LoadingError()
         }
 #else
-        if let uiImage = UIImage(data: data) {
+        if let uiImage = UIImage(data: data, scale: scale) {
             return Image(uiImage: uiImage)
         } else {
             throw AsyncImage<Content>.LoadingError()
