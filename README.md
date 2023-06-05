@@ -24,7 +24,7 @@ CachedAsyncImage(urlRequest: logoURLRequest, urlCache: .imageCache)
 
 extension URLCache {
     
-    static let imageCache = URLCache(memoryCapacity: 512*1000*1000, diskCapacity: 10*1000*1000*1000)
+    static let imageCache = URLCache(memoryCapacity: 512_000_000, diskCapacity: 10_000_000_000)
 }
 ```
 
