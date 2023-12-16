@@ -317,7 +317,8 @@ public struct CachedAsyncImage<Content>: View where Content: View {
         do {
             if let urlRequest = urlRequest {
                 let (image, metrics) = try await remoteImage(from: urlRequest, session: urlSession)
-                if metrics.transactionMetrics.last?.resourceFetchType == .localCache {
+                // NOTE: There is 2 transactions metrics if the request cache policy is the default one, only the first transaction concern the cached resource https://developer.apple.com/documentation/foundation/nsurlrequest/cachepolicy/useprotocolcachepolicy
+                if metrics.transactionMetrics.first?.resourceFetchType == .localCache {
                     // WARNING: This does not behave well when the url is changed with another
                     phase = .success(image)
                 } else {
