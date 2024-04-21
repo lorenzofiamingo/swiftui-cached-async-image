@@ -39,7 +39,7 @@ Remember when setting the cache the response (in this case our image) must be no
 
 ## Other projects
 
-[SwiftUI VariadicViews 🥞]([https://github.com/lorenzofiamingo/swiftui-async-button](https://github.com/lorenzofiamingo/swiftui-variadic-views)
+[SwiftUI VariadicViews 🥞](https://github.com/lorenzofiamingo/swiftui-variadic-views)
 
 [SwiftUI AsyncButton 🖲️](https://github.com/lorenzofiamingo/swiftui-async-button)
 
