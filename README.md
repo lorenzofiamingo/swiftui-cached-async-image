@@ -30,6 +30,12 @@ extension URLCache {
 
 Remember when setting the cache the response (in this case our image) must be no larger than about 5% of the disk cache (See [this discussion](https://developer.apple.com/documentation/foundation/nsurlsessiondatadelegate/1411612-urlsession#discussion)).
 
+You can also modify the `URLSessionConfiguration` used by `CachedAsyncImage` via `URLSessionConfiguration.cachedAsyncImage`:
+
+```swift
+URLSessionConfiguration.cachedAsyncImage.protocolClasses = [MyContentProtocol.self]
+```
+
 ## Installation
 
 1. In Xcode, open your project and navigate to **File** → **Swift Packages** → **Add Package Dependency...**
