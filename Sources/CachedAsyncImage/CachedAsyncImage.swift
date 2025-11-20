@@ -79,7 +79,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     
     public var body: some View {
         content(phase)
-            .task(id: urlRequest, load)
+            .task(id: urlRequest) { await load() }
     }
     
     /// Loads and displays an image from the specified URL.
@@ -312,7 +312,6 @@ public struct CachedAsyncImage<Content>: View where Content: View {
         }
     }
     
-    @Sendable
     private func load() async {
         do {
             if let urlRequest = urlRequest {
