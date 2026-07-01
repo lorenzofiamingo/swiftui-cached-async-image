@@ -294,7 +294,7 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     ///   - content: A closure that takes the load phase as an input, and
     ///     returns the view to display for the specified phase.
     public init(urlRequest: URLRequest?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
-        let configuration = URLSessionConfiguration.default
+        let configuration = URLSessionConfiguration.cachedAsyncImage
         configuration.urlCache = urlCache
         self.urlRequest = urlRequest
         self.urlSession =  URLSession(configuration: configuration)
@@ -402,5 +402,23 @@ private extension URLSession {
         let controller = URLSessionTaskController()
         let (data, response) = try await data(for: request, delegate: controller)
         return (data, response, controller.metrics!)
+    }
+}
+
+// MARK: - URLSessionConfiguration
+
+@MainActor
+private var urlSessionConfig = URLSessionConfiguration.default
+extension URLSessionConfiguration {
+
+    /// Default configuration used by `CachedAsyncImage`.
+    @MainActor
+    public static var cachedAsyncImage: URLSessionConfiguration {
+        get {
+            urlSessionConfig
+        }
+        set {
+            urlSessionConfig = newValue
+        }
     }
 }
